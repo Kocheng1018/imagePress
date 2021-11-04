@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -35,11 +36,13 @@ func main() {
 }
 
 func listfile(path string) {
+	wg := new(sync.WaitGroup)
+	wg.Add(5)
 	files, _ := ioutil.ReadDir(path + "/in")
-	for idx, file := range files {
-		fmt.Println("")
-		fmt.Printf("剩餘檔案:")
-		fmt.Println(len(files) - idx)
+	for _, file := range files {
+		if file.Name() == "README.md" {
+			continue
+		}
 		if file.IsDir() {
 			listfile(path + "/in/" + file.Name())
 		} else {
@@ -47,16 +50,15 @@ func listfile(path string) {
 			if err != nil {
 				panic(err)
 			}
-			// if (contentType != "image/jpeg") {
-			// }
-			fmt.Println("contentType: ", contentType)
-			fmt.Println("目前檔案:" + file.Name())
-			img2webp(file.Name())
+			fmt.Println("contentType:", contentType)
+			fmt.Println("目前檔案:" + file.Name() + "\n")
+			go img2webp(file.Name(), wg)
 		}
 	}
+	wg.Wait()
 }
 
-func img2webp(inPath string) {
+func img2webp(inPath string, wg *sync.WaitGroup) {
 	nameArr := strings.Split(inPath, ".")
 	name := strings.Join(nameArr[:len(nameArr)-1], "")
 	args := []string{"./in/" + inPath, "./out/" + name + ".webp"}
@@ -65,6 +67,7 @@ func img2webp(inPath string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer wg.Done()
 }
 
 func checkType(path string) (string, error) {
@@ -75,7 +78,7 @@ func checkType(path string) (string, error) {
 	defer f.Close()
 
 	contentType, err := GetFileContentType(f)
-	return contentType, err 
+	return contentType, err
 
 }
 
