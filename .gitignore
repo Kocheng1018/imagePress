@@ -1,4 +1,4 @@
 .DS_Store
-in/*
-out/*
-backup/*
+/in/*
+/out/*
+/backup/*
