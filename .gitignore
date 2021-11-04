@@ -1,4 +1,6 @@
 .DS_Store
-/in/*
-/out/*
+in/*
+!in/README.md
+out/*
+!out/README.md
 /backup/*
