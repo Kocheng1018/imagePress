@@ -3,14 +3,10 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
-	"os/exec"
-	"strings"
-	"sync"
 	"time"
 
-	"github.com/h2non/filetype"
+	"github.com/h2non/bimg"
 )
 
 func main() {
@@ -26,7 +22,6 @@ func main() {
 }
 
 func listfile(path string) {
-	wg := new(sync.WaitGroup)
 	files, _ := ioutil.ReadDir(path + "/in")
 	for _, file := range files {
 		if file.Name() == "README.md" {
@@ -35,35 +30,35 @@ func listfile(path string) {
 		if file.IsDir() {
 			listfile(path + "/in/" + file.Name())
 		} else {
-			contentType := checkType(file.Name())
-			fmt.Println("contentType:", contentType)
-			fmt.Println("目前檔案:" + file.Name() + "\n")
-			wg.Add(1)
-			go img2webp(file.Name(), wg)
+			imagePress(file.Name())
 		}
 	}
-	wg.Wait()
 }
 
-func img2webp(inPath string, wg *sync.WaitGroup) {
-	defer wg.Done()
-	nameArr := strings.Split(inPath, ".")
-	name := strings.Join(nameArr[:len(nameArr)-1], "")
-	args := []string{"./in/" + inPath, "./out/" + name + ".webp"}
-	cmd := exec.Command("./libwebp/bin/cwebp", "-q", "60", args[0], "-o", args[1])
-	_, err := cmd.CombinedOutput()
+func imagePress(url string) {
+
+	buffer, err := bimg.Read("./in/" + url)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Fprintln(os.Stderr, err)
 	}
-}
 
-func checkType(path string) string {
-	buf, _ := ioutil.ReadFile("./in/" + path)
-
-	kind, _ := filetype.Match(buf)
-	if kind == filetype.Unknown {
-		fmt.Println("Unknown file type")
-		return ""
+	options := bimg.Options{
+		Quality: 60,
 	}
-	return kind.Extension
+
+	newImage, err := bimg.NewImage(buffer).Process(options)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+	}
+
+	fmt.Println("beforeType:", bimg.NewImage(newImage).Type())
+
+	convertImage, err := bimg.NewImage(newImage).Convert(bimg.WEBP)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+	}
+
+	fmt.Println("afterType:", bimg.NewImage(convertImage).Type())
+
+	bimg.Write("./out/test.webp", convertImage)
 }
