@@ -26,7 +26,6 @@ func main() {
 }
 
 type TmpStruct struct {
-	buffer      []byte
 	options     bimg.Options
 	newFileName string
 }
@@ -38,13 +37,11 @@ func listfile(path string) {
 	options := bimg.Options{
 		Quality: 60,
 		Type:    bimg.ImageType(bimg.WEBP),
-		// Compression: 90,
-		// Speed:       8,
 	}
 
 	p, _ := ants.NewPoolWithFunc(5, func(in interface{}) {
 		st := in.(TmpStruct)
-		imagePress(st.buffer, st.options, st.newFileName)
+		imagePress(st.options, st.newFileName)
 		wg.Done()
 	})
 
@@ -61,33 +58,28 @@ func listfile(path string) {
 		// }
 		spew.Dump(fmt.Sprintf("run:%s", file.Name()))
 
-		buffer, err := bimg.Read("./in/" + file.Name())
-		if err != nil {
-			spew.Dump(os.Stderr, err)
-		}
-
 		newfileName := strings.TrimSuffix(file.Name(), filepath.Ext(file.Name()))
 
 		p.Invoke(TmpStruct{
-			buffer:      buffer,
 			newFileName: newfileName,
 			options:     options,
 		})
-
-		// syncCalculateSum := func() {
-		// 	imagePress(buffer, options, newfileName)
-		// 	wg.Done()
-		// }
-		// _ = ants.Submit(syncCalculateSum)
 	}
 	wg.Wait()
 }
 
-func imagePress(buffer []byte, options bimg.Options, newFileName string) {
-	if bimg.NewImage(buffer).Type() != "jpeg" &&
-		bimg.NewImage(buffer).Type() != "heif" &&
-		bimg.NewImage(buffer).Type() != "webp" &&
-		bimg.NewImage(buffer).Type() != "png" {
+func imagePress(options bimg.Options, newFileName string) {
+
+	buffer, err := bimg.Read("./in/" + newFileName)
+	if err != nil {
+		spew.Dump(os.Stderr, err)
+	}
+
+	imageType := bimg.NewImage(buffer).Type()
+	if imageType != "jpeg" &&
+		imageType != "heif" &&
+		imageType != "webp" &&
+		imageType != "png" {
 		spew.Dump(newFileName)
 		return
 	}
