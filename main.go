@@ -42,7 +42,7 @@ func listfile(path string) {
 		// Speed:       8,
 	}
 
-	p, _ := ants.NewPoolWithFunc(10, func(in interface{}) {
+	p, _ := ants.NewPoolWithFunc(5, func(in interface{}) {
 		st := in.(TmpStruct)
 		imagePress(st.buffer, st.options, st.newFileName)
 		wg.Done()
@@ -98,4 +98,5 @@ func imagePress(buffer []byte, options bimg.Options, newFileName string) {
 	}
 
 	bimg.Write("./out/"+newFileName+".webp", newImage)
+	bimg.VipsCacheDropAll()
 }
