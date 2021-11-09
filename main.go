@@ -27,7 +27,7 @@ func main() {
 
 type TmpStruct struct {
 	options     bimg.Options
-	newFileName string
+	fileName string
 }
 
 func listfile(path string) {
@@ -41,7 +41,7 @@ func listfile(path string) {
 
 	p, _ := ants.NewPoolWithFunc(5, func(in interface{}) {
 		st := in.(TmpStruct)
-		imagePress(st.options, st.newFileName)
+		imagePress(st.options, st.fileName)
 		wg.Done()
 	})
 
@@ -58,22 +58,22 @@ func listfile(path string) {
 		// }
 		spew.Dump(fmt.Sprintf("run:%s", file.Name()))
 
-		newfileName := strings.TrimSuffix(file.Name(), filepath.Ext(file.Name()))
-
 		p.Invoke(TmpStruct{
-			newFileName: newfileName,
+			fileName: file.Name(),
 			options:     options,
 		})
 	}
 	wg.Wait()
 }
 
-func imagePress(options bimg.Options, newFileName string) {
+func imagePress(options bimg.Options, fileName string) {
 
-	buffer, err := bimg.Read("./in/" + newFileName)
+	buffer, err := bimg.Read("./in/" + fileName)
 	if err != nil {
 		spew.Dump(os.Stderr, err)
 	}
+
+	newFileName := strings.TrimSuffix(fileName, filepath.Ext(fileName))
 
 	imageType := bimg.NewImage(buffer).Type()
 	if imageType != "jpeg" &&
