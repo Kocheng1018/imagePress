@@ -37,10 +37,6 @@ var options bimg.Options = bimg.Options{
 	Type:    bimg.ImageType(bimg.WEBP),
 }
 
-// var optionsQuality bimg.Options = bimg.Options{
-// 	Quality: 60,
-// }
-
 func listfile(path string) {
 	wg := new(sync.WaitGroup)
 
@@ -68,22 +64,21 @@ func listfile(path string) {
 }
 
 func imagePress(fileName string, newFileName string) {
-
 	buffer, err := bimg.Read("./in/" + fileName)
 	if err != nil {
 		spew.Dump(os.Stderr, err)
 	}
 
 	image := bimg.NewImage(buffer)
-	// var imageByte []byte
 
-	spew.Dump(image.Type())
-	// switch image.Type() {
-	// case "jpeg", "png", "heif", "webp":
-	// 	imageByte, _ = image.Process(options)
-	// default:
-	// 	return
-	// }
+	var imageByte []byte
 
-	// bimg.Write("./out/"+newFileName+".webp", imageByte)
+	switch image.Type() {
+	case "jpeg", "png", "heif", "webp":
+		imageByte, _ = image.Process(options)
+	default:
+		return
+	}
+
+	bimg.Write("./out/"+newFileName+".webp", imageByte)
 }
