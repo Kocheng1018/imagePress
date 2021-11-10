@@ -17,6 +17,8 @@ import (
 func main() {
 	startTime := time.Now()
 	path, err := os.Getwd()
+	bimg.VipsCacheSetMaxMem(2048)
+	bimg.VipsCacheSetMax(2048)
 	if err != nil {
 		panic(err)
 	}
@@ -44,7 +46,7 @@ func listfile(path string) {
 
 	files, _ := ioutil.ReadDir("in")
 
-	p, _ := ants.NewPoolWithFunc(10, func(in interface{}) {
+	p, _ := ants.NewPoolWithFunc(4, func(in interface{}) {
 		st := in.(TmpStruct)
 		imagePress(st.fileName, st.newFileName)
 		wg.Done()
