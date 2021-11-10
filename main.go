@@ -26,23 +26,27 @@ func main() {
 }
 
 type TmpStruct struct {
-	options     bimg.Options
 	fileName    string
 	newFileName string
 }
+
+var options bimg.Options = bimg.Options{
+	Quality: 60,
+	Type:    bimg.ImageType(bimg.WEBP),
+}
+
+// var optionsQuality bimg.Options = bimg.Options{
+// 	Quality: 60,
+// }
 
 func listfile(path string) {
 	wg := new(sync.WaitGroup)
 
 	files, _ := ioutil.ReadDir("in")
-	options := bimg.Options{
-		Quality: 60,
-		Type:    bimg.ImageType(bimg.WEBP),
-	}
 
-	p, _ := ants.NewPoolWithFunc(5, func(in interface{}) {
+	p, _ := ants.NewPoolWithFunc(10, func(in interface{}) {
 		st := in.(TmpStruct)
-		imagePress(st.options, st.fileName, st.newFileName)
+		imagePress(st.fileName, st.newFileName)
 		wg.Done()
 	})
 
@@ -50,45 +54,33 @@ func listfile(path string) {
 
 	wg.Add(len(files))
 	for _, file := range files {
-		// if file.Name() == "README.md" {
-		// 	continue
-		// }
-		// if file.IsDir() {
-		// 	listfile(path + "/in/" + file.Name())
-		// 	continue
-		// }
 		spew.Dump(fmt.Sprintf("run:%s", file.Name()))
 
 		newFileName := strings.TrimSuffix(file.Name(), filepath.Ext(file.Name()))
 		p.Invoke(TmpStruct{
 			fileName:    file.Name(),
 			newFileName: newFileName,
-			options:     options,
 		})
 	}
 	wg.Wait()
 }
 
-func imagePress(options bimg.Options, fileName string, newFileName string) {
+func imagePress(fileName string, newFileName string) {
 
 	buffer, err := bimg.Read("./in/" + fileName)
 	if err != nil {
 		spew.Dump(os.Stderr, err)
 	}
 
-	imageType := bimg.NewImage(buffer).Type()
-	if imageType != "jpeg" &&
-		imageType != "heif" &&
-		imageType != "webp" &&
-		imageType != "png" {
-		spew.Dump(newFileName)
+	image := bimg.NewImage(buffer)
+	var imageByte []byte
+
+	switch image.Type() {
+	case "jpeg", "png", "heif", "webp":
+		imageByte, _ = image.Process(options)
+	default:
 		return
 	}
 
-	newImage, err := bimg.NewImage(buffer).Process(options)
-	if err != nil {
-		spew.Dump(os.Stderr, err)
-	}
-
-	bimg.Write("./out/"+newFileName+".webp", newImage)
+	bimg.Write("./out/"+newFileName+".webp", imageByte)
 }
