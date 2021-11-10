@@ -11,7 +11,6 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/h2non/bimg"
-	"github.com/h2non/filetype"
 	"github.com/panjf2000/ants/v2"
 )
 
@@ -57,7 +56,7 @@ func listfile(path string) {
 
 	wg.Add(len(files))
 	for _, file := range files {
-		// spew.Dump(fmt.Sprintf("run:%s", file.Name()))
+		spew.Dump(fmt.Sprintf("run:%s", file.Name()))
 
 		newFileName := strings.TrimSuffix(file.Name(), filepath.Ext(file.Name()))
 		p.Invoke(TmpStruct{
@@ -74,13 +73,11 @@ func imagePress(fileName string, newFileName string) {
 	if err != nil {
 		spew.Dump(os.Stderr, err)
 	}
-	kind, _ := filetype.Match(buffer)
 
-	spew.Dump(kind.Extension)
-	// image := bimg.NewImage(buffer)
+	image := bimg.NewImage(buffer)
 	// var imageByte []byte
 
-	// spew.Dump(image.Type())
+	spew.Dump(image.Type())
 	// switch image.Type() {
 	// case "jpeg", "png", "heif", "webp":
 	// 	imageByte, _ = image.Process(options)
